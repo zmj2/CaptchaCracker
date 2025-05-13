@@ -3,7 +3,6 @@ import sys
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 import cv2
 import numpy as np
 from tqdm import tqdm
@@ -18,7 +17,7 @@ print(f"✅ Using device: {device}")
 IMG_DIR = "data/raw"
 MASK_DIR = "data/masks"
 BATCH_SIZE = 4
-EPOCHS = 20
+EPOCHS = 50
 LR = 1e-3
 IMG_SIZE = (80, 200)
 

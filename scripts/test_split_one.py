@@ -3,37 +3,42 @@ import sys
 import cv2
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 from torch.nn.functional import sigmoid
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 from utils.unet_model import UNet
 sys.path.pop(0)
+from scipy.signal import find_peaks
 
+# ======= 配置 =======
 MODEL_PATH = "checkpoints/unet_epoch50.pth"
-INPUT_DIR = "data/raw/"
-OUTPUT_DIR = "data/chars"
+IMAGE_PATH = "data/raw/0gQtnV_10.png"  # ← 改成你要测试的图片路径
+OUTPUT_DIR = "test"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# ====== 加载模型 ======
 model = UNet(in_channels=1, out_channels=1).to(device)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
 
-def preprocess_image(img_path):
-    image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    image_resized = cv2.resize(image, (200, 80))
-    tensor = torch.tensor(image_resized / 255.0, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device)
-    return tensor, image
+# ====== 预处理 ======
+def preprocess_image(path):
+    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    img_resized = cv2.resize(img, (200, 80))
+    tensor = torch.tensor(img_resized / 255.0, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device)
+    return tensor, img
 
-def extract_characters(mask, raw_img, filename):
+# ====== 分割函数 ======
+def split_by_projection(mask, raw_img, filename, num_chars=6):
     h, w = mask.shape
-    num_chars = 6
     projection = np.sum(mask > 0.5, axis=0).astype(np.float32)
     kernel_width = max(5, min(31, int(w / num_chars * 1.5) // 2 * 2 + 1))
     projection_smooth = cv2.GaussianBlur(projection, (kernel_width, 1), 0).flatten()
 
     inverted = projection_smooth.max() - projection_smooth
-    threshold = inverted.mean() + inverted.std() * 0.7
+    threshold = inverted.mean() + inverted.std() * 0.8
     above = inverted > threshold
     segments = []
     start = None
@@ -68,35 +73,40 @@ def extract_characters(mask, raw_img, filename):
         best_offset = np.argmin(local)
         refined_split.append(local_start + best_offset)
 
-    basename = os.path.splitext(os.path.basename(filename))[0]
-    label = basename[:6]
-    char_count = {}
-
     for i in range(num_chars):
         x1, x2 = refined_split[i], refined_split[i + 1]
         char_img = raw_img[:, x1:x2]
-
-        if x2 - x1 < 2:
-            print(f"[SKIP] {filename}: width too small at char {i}")
-            continue
-
-        char_label = label[i] if i < len(label) else "_"
-        char_count[char_label] = char_count.get(char_label, 0) + 1
-        index = char_count[char_label]
-        out_name = f"{basename}_{char_label}_{index}.png"
+        out_name = f"{os.path.splitext(os.path.basename(filename))[0]}_char{i+1}.png"
         cv2.imwrite(os.path.join(OUTPUT_DIR, out_name), char_img)
 
-for filename in os.listdir(INPUT_DIR):
-    if not filename.endswith(".png"):
-        continue
+    fig, axs = plt.subplots(3, 1, figsize=(12, 8))
+    axs[0].imshow(raw_img, cmap='gray')
+    axs[0].set_title("Raw Image + Split Lines")
+    for x in refined_split[1:-1]:
+        axs[0].axvline(x=x, color='r', linestyle='--')
 
-    img_path = os.path.join(INPUT_DIR, filename)
-    input_tensor, raw_img = preprocess_image(img_path)
+    # 掩码
+    axs[1].imshow(mask, cmap='gray')
+    axs[1].set_title("Predicted Mask")
 
-    with torch.no_grad():
-        pred = model(input_tensor)
-        pred_mask = sigmoid(pred).squeeze().cpu().numpy()
-        pred_mask_resized = cv2.resize(pred_mask, (raw_img.shape[1], raw_img.shape[0]))
-        extract_characters(pred_mask_resized, raw_img, filename)
+    # 投影曲线
+    axs[2].plot(projection_smooth, label="Smoothed Projection")
+    axs[2].plot(inverted, label="Inverted")
+    axs[2].scatter(peaks, inverted[peaks], color='red', label="Peaks")
+    axs[2].set_title("Vertical Projection + Split Points")
+    axs[2].legend()
 
-print("✅ 字符分割完成，结果已保存到 data/chars/")
+    plt.tight_layout()
+    plt.show()
+
+# ====== 执行预测 ======
+tensor, raw_img = preprocess_image(IMAGE_PATH)
+
+with torch.no_grad():
+    pred = model(tensor)
+    mask = sigmoid(pred).squeeze().cpu().numpy()
+    mask_resized = cv2.resize(mask, (raw_img.shape[1], raw_img.shape[0]))
+
+split_by_projection(mask_resized, raw_img, IMAGE_PATH)
+
+print("✅ 单图分割完成，已保存为 test/char1.png ~ test/char6.png")
