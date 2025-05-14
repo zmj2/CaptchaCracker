@@ -17,7 +17,7 @@ model.conf = 0.25
 model.iou = 0.45
 
 max_size = 0
-print("🔎 正在扫描最大字符尺寸...")
+print("Scanning maximum character size...")
 
 for img_name in tqdm(os.listdir(img_dir)):
     if not img_name.endswith(".png") or '_' not in img_name:
@@ -37,9 +37,9 @@ for img_name in tqdm(os.listdir(img_dir)):
         h, w = y2 - y1, x2 - x1
         max_size = max(max_size, max(h, w))
 
-print(f"✅ 最大字符尺寸为：{max_size} × {max_size}")
+print(f"The maximum character size is: {max_size} × {max_size}")
 
-print("🚀 开始提取字符图像并统一尺寸...")
+print("Start extracting character images and unifying their size...")
 
 for img_name in tqdm(os.listdir(img_dir)):
     if not img_name.endswith(".png") or '_' not in img_name:
@@ -54,10 +54,10 @@ for img_name in tqdm(os.listdir(img_dir)):
     boxes = results.xyxy[0].cpu().numpy()
 
     if len(boxes) != len(char_label):
-        print(f"⚠️ {img_name} 检测字符数为 {len(boxes)}，应为 {len(char_label)}，跳过。")
+        print(f"{img_name} The number of characters detected is {len(boxes)}. It should be {len(char_label)}, so skip it.")
         continue
 
-    boxes = sorted(boxes, key=lambda x: x[0])  # 从左到右
+    boxes = sorted(boxes, key=lambda x: x[0]) 
 
     for i, box in enumerate(boxes):
         x1, y1, x2, y2 = map(int, box[:4])
@@ -76,4 +76,4 @@ for img_name in tqdm(os.listdir(img_dir)):
         out_name = f"{label_char}_{i}_{suffix}.png"
         cv2.imwrite(os.path.join(save_dir, out_name), resized)
 
-print("✅ 所有字符提取完成，保存路径：", save_dir)
+print("All characters are extracted and saved in the following path: ", save_dir)
