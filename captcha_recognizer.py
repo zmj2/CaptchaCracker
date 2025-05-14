@@ -41,7 +41,7 @@ def recognize_captcha(img_path):
     if len(boxes) != 6:
         return "[ERR: bad box count]"
 
-    boxes = sorted(boxes, key=lambda x: x[0])  # 按 x 坐标排序
+    boxes = sorted(boxes, key=lambda x: x[0])  
     chars = []
 
     for box in boxes:
@@ -65,7 +65,7 @@ def recognize_captcha(img_path):
 
 
 result = recognize_captcha("data/raw/0Fm2HT_205.png")
-print("预测结果:", result)
+print("Prediction results:", result)
 
 '''
 files = sorted([f for f in os.listdir(image_dir) if f.endswith(".png)])
@@ -76,6 +76,6 @@ with open(output_txt, "w", encoding="utf-8") as out:
         pred = recognize_captcha(img_path)
         out.write(f"{i}\t{pred}\n")
 
-print(f"✅ 批量识别完成，结果已保存至: {output_txt}")
+print(f"Batch recognition completed, results saved to: {output_txt}")
 '''
 
