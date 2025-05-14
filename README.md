@@ -187,7 +187,7 @@ MIT License
 
 **Barry Chao**  
 
-Undergraduate, Department of Artificial Intelligence, School of Information, Xiamen University  
+Undergraduate, Department of Artificial Intelligence, School of Information, Xiamen University, China
 
 📧 Email: barryjoth@gmail.com  
 💬 WeChat: zmj_418
