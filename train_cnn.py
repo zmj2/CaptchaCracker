@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 total += y.size(0)
         return correct / total, total_loss / total
 
-    print("🚀 开始训练...")
+    print("Start Training...")
     for epoch in range(1, epochs+1):
         model.train()
         loop = tqdm(train_loader, desc=f"Epoch {epoch}/{epochs}")
@@ -81,7 +81,7 @@ if __name__ == '__main__':
             loop.set_postfix(loss=loss.item())
 
         acc, val_loss = evaluate(model, val_loader)
-        print(f"🎯 验证准确率：{acc*100:.2f}% | 验证Loss: {val_loss:.4f}")
+        print(f"Validation accuracy: {acc*100:.2f}% | Validation Loss: {val_loss:.4f}")
 
     torch.save(model.state_dict(), "char_resnet18.pth")
-    print("✅ 模型训练完成并保存为 char_resnet18.pth")
+    print("Model training is completed and saved as char_resnet18.pth")
