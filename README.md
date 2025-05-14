@@ -186,7 +186,9 @@ MIT License
 ## 👤 Author
 
 **Barry Chao**  
+
 Undergraduate, Department of Artificial Intelligence, School of Information, Xiamen University  
+
 📧 Email: barryjoth@gmail.com  
 💬 WeChat: zmj_418
 
