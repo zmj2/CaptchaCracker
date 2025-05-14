@@ -16,7 +16,7 @@ index_to_char = {i: c for c, i in char_to_index.items()}
 validation_rate = 0.1
 
 if not os.path.exists(train_dir):
-    print("📦 正在构建数据集目录结构...")
+    print("Building dataset directory structure...")
     os.makedirs(train_dir)
     os.makedirs(val_dir)
     for i in range(len(char_classes)):
@@ -40,7 +40,7 @@ if not os.path.exists(train_dir):
             dst = os.path.join(dst_dir, str(idx), f)
             shutil.copy(src, dst)
 
-    print("✅ 数据整理完成")
+    print("Data sorting completed")
 
 with open("idx_to_char.json", "w") as f:
     json.dump(index_to_char, f)
