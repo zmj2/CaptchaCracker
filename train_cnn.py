@@ -67,6 +67,9 @@ if __name__ == '__main__':
                 total += y.size(0)
         return correct / total, total_loss / total
 
+    best_acc = 0.0
+    best_model_state = None
+    
     print("Start Training...")
     for epoch in range(1, epochs+1):
         model.train()
@@ -83,5 +86,15 @@ if __name__ == '__main__':
         acc, val_loss = evaluate(model, val_loader)
         print(f"Validation accuracy: {acc*100:.2f}% | Validation Loss: {val_loss:.4f}")
 
+        if acc > best_acc:
+            best_acc = acc
+            best_model_state = model.state_dict().copy()
+            print(f"New best model saved at epoch {epoch} with acc {acc * 100:.2f}%")
+
+
     torch.save(model.state_dict(), "char_resnet18.pth")
     print("Model training is completed and saved as char_resnet18.pth")
+
+    if best_model_state is not None:
+        torch.save(best_model_state, "char_resnet18_best.pth")
+        print(f"Best Model (acc={best_acc * 100:.2f}%). Saved as char_resnet18_best.pth")
