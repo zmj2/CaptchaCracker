@@ -18,6 +18,7 @@ with open("idx_to_char.json", "r") as f:
 
 
 img_size = 64
+yolo_size = 320
 transform = transforms.Compose([
     transforms.Resize((img_size, img_size)),
     transforms.ToTensor()
@@ -30,13 +31,14 @@ cnn_model.load_state_dict(torch.load(resnet_path, map_location='cpu'))
 cnn_model.eval()
 
 yolo_model = torch.hub.load('yolov5', 'custom', path=yolo_path, source='local')
-yolo_model.conf = 0.25
+yolo_model.conf = 0.6
 yolo_model.iou = 0.45
 
 def recognize_captcha(img_path):
     img = cv2.imread(str(img_path))
-    results = yolo_model(img)
+    results = yolo_model(img, size=yolo_size)
     boxes = results.xyxy[0].cpu().numpy()
+    boxes = [box for box in boxes if box[4] >= 0.65]
 
     if len(boxes) != 6:
         return "[ERR: bad box count]"
