@@ -13,7 +13,7 @@ img_size = 320
 os.makedirs(save_dir, exist_ok=True)
 
 model = torch.hub.load('yolov5', 'custom', path=model_path, source='local')
-model.conf = 0.25 
+model.conf = 0.6
 model.iou = 0.45
 
 max_size = 0
@@ -28,6 +28,7 @@ for img_name in tqdm(os.listdir(img_dir)):
     img = cv2.imread(img_path)
     results = model(img, size=img_size)
     boxes = results.xyxy[0].cpu().numpy()
+    boxes = [box for box in boxes if box[4] >= 0.65]
 
     if len(boxes) != len(char_label):
         continue
